@@ -2,24 +2,32 @@
 
 import { Form, Input, Button, message } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import api from "../../common/utils/fetcher";
+import { tokenStorage } from "@/common/lib/token";
 
 export default function LoginPage() {
     const onFinish = async (values: { email: string; password: string }) => {
         try {
-            const res = await fetch("http://localhost:3001/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(values),
-            });
+            const { data } = await api.post("/auth/login", values);
 
-            if (!res.ok) throw new Error("Login failed");
+            // validate response
+            if (!data?.access_token) {
+                throw new Error(data?.message || "Invalid credentials");
+            }
 
-            const data = await res.json();
-            localStorage.setItem("token", data.access_token);
+            // store token
+            tokenStorage.set(data.access_token);
+
+            // set default Authorization header for future requests
+            api.defaults.headers.common.Authorization = `Bearer ${data.access_token}`;
+
             message.success("Login successful!");
-            window.location.href = "/dashboard";
-        } catch {
-            message.error("Invalid credentials");
+            window.location.href = "/admin";
+        } catch (err: unknown) {
+            const errorMessage =
+                err instanceof Error ? err.message : "Invalid credentials";
+            console.error("Login failed:", err);
+            message.error(errorMessage);
         }
     };
 

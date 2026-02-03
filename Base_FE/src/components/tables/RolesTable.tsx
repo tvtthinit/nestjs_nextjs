@@ -4,6 +4,8 @@ import { Table, Button, Modal, Form, Input, Popconfirm } from "antd";
 import { useEffect, useState } from "react";
 import { Role } from "../../common/interfaces/Role";
 import api from "../../common/utils/fetcher";
+import { formatDate } from "@/common/utils/formatDate";
+import { tokenStorage } from "@/common/lib/token";
 
 export default function RolesTable() {
     const [data, setData] = useState<Role[]>([]);
@@ -38,14 +40,24 @@ export default function RolesTable() {
     };
 
     const handleDelete = async (id: number) => {
-        await api.delete(`/roles/${id}`);
+        await api.delete(`/roles/${id}`, {
+            headers: {
+                Authorization: `Bearer ${tokenStorage.get()}`,
+                "Content-Type": "application/json",
+            },
+        });
         fetchData(pagination.current, pagination.pageSize);
     };
 
     const handleSave = async () => {
         const values = await form.validateFields();
         if (editingRecord) {
-            await api.put(`/roles/${editingRecord.id}`, values);
+            await api.patch(`/roles/${editingRecord.id}`, values, {
+                headers: {
+                    Authorization: `Bearer ${tokenStorage.get()}`,
+                    "Content-Type": "application/json",
+                },
+            });
         } else {
             await api.post(`/roles`, values);
         }
@@ -54,10 +66,25 @@ export default function RolesTable() {
     };
 
     const columns = [
+        {
+            title: "No.",
+            dataIndex: "index",
+            render: (_: unknown, __: Role, index: number) =>
+                (pagination.current! - 1) * pagination.pageSize! + index + 1,
+        },
+
         { title: "Name", dataIndex: "name", sorter: true },
-        { title: "Email", dataIndex: "email" },
-        { title: "Age", dataIndex: "age", sorter: true },
-        { title: "Address", dataIndex: "address" },
+        { title: "Description", dataIndex: "description" },
+        {
+            title: "Create At",
+            dataIndex: "created_at",
+            render: (value: string) => formatDate(value),
+        },
+        {
+            title: "Updated At",
+            dataIndex: "updated_at",
+            render: (value: string) => formatDate(value),
+        },
         {
             title: "Actions",
             render: (_: any, record: Role) => (
@@ -97,13 +124,7 @@ export default function RolesTable() {
                     <Form.Item name="name" label="Name" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
-                    <Form.Item name="email" label="Email" rules={[{ required: true }]}>
-                        <Input />
-                    </Form.Item>
-                    <Form.Item name="age" label="Age" rules={[{ required: true }]}>
-                        <Input type="number" />
-                    </Form.Item>
-                    <Form.Item name="address" label="Address" rules={[{ required: true }]}>
+                    <Form.Item name="description" label="Description" rules={[{ required: true }]}>
                         <Input />
                     </Form.Item>
                 </Form>
