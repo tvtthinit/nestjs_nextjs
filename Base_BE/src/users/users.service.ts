@@ -60,7 +60,7 @@ export class UsersService {
 
   async findOne(currIdUserLogin: string, id: string): Promise<User> {
     console.log(`User ${id} deleted by ${currIdUserLogin}`);
-    
+
     const user = await this.userRepo.findOne({ where: { id } });
 
     if (!user) {

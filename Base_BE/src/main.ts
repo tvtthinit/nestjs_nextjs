@@ -17,7 +17,14 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   const configService = app.get(ConfigService);
-  const port = configService.get<number>('APP_PORT') || 3000;
+  const port = configService.get<number>('APP_PORT') || 3001;
+  const clientPort = configService.get<number>('CLIENT_PORT') || 3000;
+
+  app.enableCors({
+    origin: "http://localhost:"+clientPort,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  });
 
   await app.listen(port);
   console.log(`🚀 Server running on http://localhost:${port}`);
